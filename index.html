@@ -5,31 +5,201 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Baco de Canciones</title>
     <style>
-        /* CSS para replicar la estética púrpura y el diseño de lista */
-        body { background-color: #202020; color: white; font-family: sans-serif; }
-        .header { background-color: #551A8B; padding: 15px; text-align: center; }
-        .container { max-width: 400px; margin: 0 auto; padding: 20px; }
-        .list-item { background-color: #333; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .search-bar { width: 100%; padding: 10px; margin-bottom: 20px; border-radius: 5px; border: none; }
-        /* Aquí iría el CSS para los logos y el menú inferior */
+        body { 
+            background-color: #121212; 
+            color: #E0E0E0; 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding-bottom: 60px; /* Espacio para la barra inferior */
+        }
+        .header { 
+            background-color: #551A8B; /* Púrpura */
+            color: white; 
+            padding: 20px 0; 
+            text-align: center; 
+            font-size: 1.5em; 
+            font-weight: bold;
+        }
+        .container { 
+            max-width: 450px; 
+            margin: 20px auto; 
+            padding: 0 10px; 
+        }
+        .search-bar { 
+            width: 100%; 
+            padding: 12px; 
+            margin-bottom: 20px; 
+            border-radius: 8px; 
+            border: 1px solid #333; 
+            background-color: #333; 
+            color: white;
+            box-sizing: border-box;
+        }
+        .list-item { 
+            background-color: #1F1F1F; 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 12px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-left: 5px solid #551A8B; 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        .list-item strong { 
+            color: #FFF; 
+            font-size: 1.1em;
+        }
+        .list-item p { 
+            font-size: 0.85em; 
+            margin: 4px 0 0 0; 
+            color: #AAA;
+        }
+        .list-item a {
+            text-decoration: none;
+            padding: 6px 8px;
+            margin-left: 5px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            transition: background-color 0.3s;
+        }
+        .link-youtube { 
+            background-color: #FF0000; 
+            color: white; 
+        }
+        .link-letra { 
+            background-color: #007bff; 
+            color: white; 
+        }
+        .btn-ensayo {
+            background-color: #551A8B; 
+            color: white; 
+            border: none;
+            padding: 6px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+        /* Menú inferior (simulado) */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #1F1F1F;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+        .nav-bar div {
+            color: #AAA;
+            font-size: 0.7em;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
+
     <div class="header">Baco de Canciones</div>
+
     <div class="container">
-        <input type="text" class="search-bar" placeholder="Buscar">
+        <input type="text" id="searchInput" class="search-bar" placeholder="Buscar canción...">
         <div id="song-list">
-            </div>
+            <div style="text-align: center; padding: 50px;">Cargando canciones...</div>
+        </div>
     </div>
 
+    <div class="nav-bar">
+        <div>🎶 Canciones</div>
+        <div>🎯 Zona de Ensayo</div>
+        <div>👤 Usuarios</div>
+    </div>
+    
     <script>
-        // Este código es solo la estructura. El código real de conexión y lógica va aquí.
+        // ******************************************************************
+        // ****** URL DE TU API DE GOOGLE SHEETS (YA INSERTADA) *************
+        // ******************************************************************
+        const API_URL = "https://script.google.com/macros/s/AKfycbyHlsOo5KcUCzq6uAeHM9Jy8eSMFKSHPIkyrCRfjO-b1ArNjcljxqmusyWHAERp-9P6/exec"; 
+        
+        let allSongs = []; // Almacena todas las canciones para el filtro de búsqueda
+
+        /**
+         * Función que carga los datos de las canciones desde la API
+         */
         function loadSongs() {
-            document.getElementById('song-list').innerHTML = 
-                '<div class="list-item">A cada instante <button>Ensayo</button></div>' +
-                '<div class="list-item">A lo alto y sublime <button>Ensayo</button></div>';
+            fetch(API_URL)
+                .then(response => response.json())
+                .then(songs => {
+                    if (songs.error) {
+                        displaySongs(songs); // Muestra el mensaje de error
+                        return;
+                    }
+                    allSongs = songs.filter(song => song.Título); // Filtra por canciones con título
+                    displaySongs(allSongs);
+                })
+                .catch(error => {
+                    document.getElementById('song-list').innerHTML = 
+                        `<div class="list-item" style="color: red;">Error al conectar: ${error.message}. Verifica la URL de la API.</div>`;
+                });
         }
 
+        /**
+         * Función para renderizar la lista de canciones en el HTML
+         * @param {Array} songsToDisplay - Lista de canciones filtradas o completas
+         */
+        function displaySongs(songsToDisplay) {
+            const songList = document.getElementById('song-list');
+            songList.innerHTML = ''; // Limpiar la lista
+
+            if (songsToDisplay.error) {
+                 songList.innerHTML = `<div class="list-item" style="color: red;">Error de API: ${songsToDisplay.error}. Revisa el nombre de la hoja en Apps Script.</div>`;
+                 return;
+            }
+            if (songsToDisplay.length === 0) {
+                 songList.innerHTML = `<div style="text-align: center; padding: 20px; color: #AAA;">No se encontraron canciones.</div>`;
+                 return;
+            }
+
+            songsToDisplay.forEach(song => {
+                const item = document.createElement('div');
+                item.className = 'list-item';
+                item.innerHTML = `
+                    <div>
+                        <strong>${song.Título}</strong>
+                        <p>${song.Autor}</p>
+                    </div>
+                    <div>
+                        <a href="${song.Link_YouTube}" target="_blank" class="link-youtube">▶️ YouTube</a>
+                        <a href="${song.Link_Letra}" target="_blank" class="link-letra">📜 Letra</a>
+                        <button onclick="toggleEnsayo('${song.Título}')" class="btn-ensayo">Ensayo</button>
+                    </div>
+                `;
+                songList.appendChild(item);
+            });
+        }
+
+        /**
+         * Función para filtrar la lista al escribir en el buscador
+         */
+        document.getElementById('searchInput').addEventListener('keyup', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredSongs = allSongs.filter(song => 
+                song.Título.toLowerCase().includes(searchTerm) || 
+                song.Autor.toLowerCase().includes(searchTerm)
+            );
+            displaySongs(filteredSongs);
+        });
+
+
+        // La lógica de ensayo solo muestra una alerta. Se puede expandir con una función POST en el Apps Script.
+        function toggleEnsayo(songTitle) {
+            alert(`¡Funcionalidad de Zona de Ensayo en desarrollo! La canción '${songTitle}' se marcaría aquí.`);
+        }
+
+        // Cargar las canciones al iniciar la aplicación
         loadSongs();
     </script>
 </body>
