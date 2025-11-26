@@ -10,10 +10,10 @@
             color: #E0E0E0; 
             font-family: Arial, sans-serif; 
             margin: 0; 
-            padding-bottom: 60px; /* Espacio para la barra inferior */
+            padding-bottom: 60px;
         }
         .header { 
-            background-color: #551A8B; /* Púrpura */
+            background-color: #551A8B; 
             color: white; 
             padding: 20px 0; 
             text-align: center; 
@@ -81,7 +81,6 @@
             font-size: 0.8em;
             margin-left: 5px;
         }
-        /* Menú inferior (simulado) */
         .nav-bar {
             position: fixed;
             bottom: 0;
@@ -119,45 +118,36 @@
     </div>
     
     <script>
-        // ******************************************************************
-        // ****** URL DE TU API DE GOOGLE SHEETS (YA INSERTADA) *************
-        // ******************************************************************
+        // URL DE TU API DE GOOGLE SHEETS (CORRECTO Y DEFINITIVO)
         const API_URL = "https://script.google.com/macros/s/AKfycbyHlsOo5KcUCzq6uAeHM9Jy8eSMFKSHPIkyrCRfjO-b1ArNjcljxqmusyWHAERp-9P6/exec"; 
         
-        let allSongs = []; // Almacena todas las canciones para el filtro de búsqueda
+        let allSongs = [];
 
-        /**
-         * Función que carga los datos de las canciones desde la API
-         */
         function loadSongs() {
             fetch(API_URL)
                 .then(response => response.json())
                 .then(songs => {
+                    // Si la API devuelve un error (como un nombre de hoja incorrecto), lo muestra.
                     if (songs.error) {
-                        displaySongs(songs); // Muestra el mensaje de error
+                        document.getElementById('song-list').innerHTML = 
+                           `<div class="list-item" style="color: yellow; border-left: 5px solid red;">¡Error de API! Revisar: ${songs.error}.</div>`;
                         return;
                     }
-                    allSongs = songs.filter(song => song.Título); // Filtra por canciones con título
+
+                    // Asegura que solo trabajamos con canciones que tienen título
+                    allSongs = songs.filter(song => song.Título && song.Título !== ''); 
                     displaySongs(allSongs);
                 })
                 .catch(error => {
                     document.getElementById('song-list').innerHTML = 
-                        `<div class="list-item" style="color: red;">Error al conectar: ${error.message}. Verifica la URL de la API.</div>`;
+                        `<div class="list-item" style="color: red; border-left: 5px solid red;">Error de conexión. Intente actualizar la página.</div>`;
                 });
         }
 
-        /**
-         * Función para renderizar la lista de canciones en el HTML
-         * @param {Array} songsToDisplay - Lista de canciones filtradas o completas
-         */
         function displaySongs(songsToDisplay) {
             const songList = document.getElementById('song-list');
-            songList.innerHTML = ''; // Limpiar la lista
+            songList.innerHTML = ''; 
 
-            if (songsToDisplay.error) {
-                 songList.innerHTML = `<div class="list-item" style="color: red;">Error de API: ${songsToDisplay.error}. Revisa el nombre de la hoja en Apps Script.</div>`;
-                 return;
-            }
             if (songsToDisplay.length === 0) {
                  songList.innerHTML = `<div style="text-align: center; padding: 20px; color: #AAA;">No se encontraron canciones.</div>`;
                  return;
@@ -181,25 +171,19 @@
             });
         }
 
-        /**
-         * Función para filtrar la lista al escribir en el buscador
-         */
         document.getElementById('searchInput').addEventListener('keyup', (e) => {
             const searchTerm = e.target.value.toLowerCase();
             const filteredSongs = allSongs.filter(song => 
-                song.Título.toLowerCase().includes(searchTerm) || 
-                song.Autor.toLowerCase().includes(searchTerm)
+                (song.Título || '').toLowerCase().includes(searchTerm) || 
+                (song.Autor || '').toLowerCase().includes(searchTerm)
             );
             displaySongs(filteredSongs);
         });
 
-
-        // La lógica de ensayo solo muestra una alerta. Se puede expandir con una función POST en el Apps Script.
         function toggleEnsayo(songTitle) {
-            alert(`¡Funcionalidad de Zona de Ensayo en desarrollo! La canción '${songTitle}' se marcaría aquí.`);
+            alert(`Función en desarrollo: '${songTitle}' se marcaría para ensayo.`);
         }
 
-        // Cargar las canciones al iniciar la aplicación
         loadSongs();
     </script>
 </body>
